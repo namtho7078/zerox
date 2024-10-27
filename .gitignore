@@ -43,7 +43,7 @@ var/
 wheels/
 share/python-wheels/
 .python-version
-
+.env
 # Ignore Python package metadata
 *.egg-info/
 .installed.cfg
