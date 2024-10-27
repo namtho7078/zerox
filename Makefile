@@ -9,7 +9,7 @@ TEST_DIR := $(PACKAGE_DIR)/tests
 
 # Define the build configs
 POETRY_VERSION := 1.8.3
-PYTHON_VERSION := 3.11
+PYTHON := python3  # Default to python3 for Docker compatibility
 POETRY := poetry
 
 # Test related configs
@@ -19,26 +19,17 @@ PYTEST_OPTIONS := -v
 .PHONY: all
 all: venv build test dev
 
-# Conditional map executable
-ifeq ($(VIRTUAL_ENV),)
-    PYTHON := python$(PYTHON_VERSION)
-else
-    PYTHON := python
-endif
-
 # Initialization
 .PHONY: init
 init:
 	@echo "== Initializing Development Environment =="
-	brew install node
-	brew install pre-commit
 	curl -sSL https://install.python-poetry.org | $(PYTHON) -
 
 	@echo "== Installing Pre-Commit Hooks =="
-	pre-commit install
-	pre-commit autoupdate
-	pre-commit install --install-hooks
-	pre-commit install --hook-type commit-msg
+	pre-commit install || true
+	pre-commit autoupdate || true
+	pre-commit install --install-hooks || true
+	pre-commit install --hook-type commit-msg || true
 
 # Create virtual environment if it doesn't exist
 .PHONY: venv
@@ -85,30 +76,37 @@ install-dev: venv build
 .PHONY: dev
 dev:
 	@echo "== Preparing development build =="
-	$(PYTHON) -m pip install -e .
+	$(POETRY) install
+	$(POETRY) run pip install -e .
 
+# Run lint and format checks
 .PHONY: check
 check: install-dev lint format
 
+# Lint the codebase
 .PHONY: lint
 lint: venv
 	@echo "== Running Linting =="
 	$(VENV_DIR)/bin/ruff check $(SRC_DIR) $(TEST_DIR)
 
+# Check code formatting
 .PHONY: format
 format: venv
-	@echo "== Running Formatting =="
+	@echo "== Running Formatting Check =="
 	$(VENV_DIR)/bin/black --check $(SRC_DIR) $(TEST_DIR)
 
+# Fix linting and formatting issues
 .PHONY: fix
 fix: install-dev lint-fix format-fix
 
+# Fix linting issues
 .PHONY: lint-fix
 lint-fix: venv
-	@echo "== Running Linting =="
+	@echo "== Fixing Linting Issues =="
 	$(VENV_DIR)/bin/ruff check --fix $(SRC_DIR) $(TEST_DIR)
 
+# Fix formatting issues
 .PHONY: format-fix
 format-fix: venv
-	@echo "== Running Formatmting =="
+	@echo "== Fixing Formatting Issues =="
 	$(VENV_DIR)/bin/black $(SRC_DIR) $(TEST_DIR)
