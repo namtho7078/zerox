@@ -86,6 +86,7 @@ def create_selected_pages_pdf(original_pdf_path: str, select_pages: Union[int, I
         # Validate page numbers
         invalid_page_numbers = []
         for page in select_pages:
+            # print("Current page is", (page))
             if page < 1 or page > total_pages:
                 invalid_page_numbers.append(page)
 
